@@ -1,22 +1,7 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel;
 
 /**
- * The default downstream {@link ChannelStateEvent} implementation.
+ * The default downstream ChannelStateEvent implementation.
  */
 public class DownstreamChannelStateEvent implements ChannelStateEvent {
 
@@ -25,9 +10,7 @@ public class DownstreamChannelStateEvent implements ChannelStateEvent {
     private final ChannelState state;
     private final Object value;
 
-    /**
-     * Creates a new instance.
-     */
+    //和UpstreamChannelStateEvent不同的是，多了一个Future对象，需要合适的时候得到通知
     public DownstreamChannelStateEvent(
             Channel channel, ChannelFuture future,
             ChannelState state, Object value) {

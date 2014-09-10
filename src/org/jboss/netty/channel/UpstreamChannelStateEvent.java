@@ -1,24 +1,9 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel;
 
 import static org.jboss.netty.channel.Channels.*;
 
 /**
- * The default upstream {@link ChannelStateEvent} implementation.
+ * The default upstream ChannelStateEvent implementation.
  */
 public class UpstreamChannelStateEvent implements ChannelStateEvent {
 
@@ -26,9 +11,7 @@ public class UpstreamChannelStateEvent implements ChannelStateEvent {
     private final ChannelState state;
     private final Object value;
 
-    /**
-     * Creates a new instance.
-     */
+
     public UpstreamChannelStateEvent(
             Channel channel, ChannelState state, Object value) {
 
@@ -48,6 +31,7 @@ public class UpstreamChannelStateEvent implements ChannelStateEvent {
         return channel;
     }
 
+    //因为是上行事件，所以事件发生了
     public ChannelFuture getFuture() {
         return succeededFuture(getChannel());
     }
