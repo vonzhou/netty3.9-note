@@ -1,4 +1,3 @@
-
 package org.jboss.netty.channel;
 
 import org.jboss.netty.util.internal.ConcurrentHashMap;

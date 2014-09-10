@@ -103,14 +103,10 @@ public final class Channels {
 		return new FailedChannelFuture(channel, cause);
 	}
 
-	// event emission methods
+	// event emission methods 事件发射方法
 
-	/**
-	 * Sends a {@code "channelOpen"} event to the first
-	 * {@link ChannelUpstreamHandler} in the {@link ChannelPipeline} of the
-	 * specified {@link Channel}. If the specified channel has a parent, a
-	 * {@code "childChannelOpen"} event will be sent, too.
-	 */
+	//发送"channelOpen"事件给该通道的流水线中第一个ChannelUpstreamHandler
+	//如果这个Channel有parent，那么一个"childChannelOpen"事件也会发射
 	public static void fireChannelOpen(Channel channel) {
 		// Notify the parent handler.
 		if (channel.getParent() != null) {

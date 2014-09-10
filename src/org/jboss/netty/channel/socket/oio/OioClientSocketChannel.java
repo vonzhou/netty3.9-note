@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel.socket.oio;
 
 import static org.jboss.netty.channel.Channels.*;
@@ -25,6 +10,7 @@ import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelSink;
 
+//注意访问权限是package
 class OioClientSocketChannel extends OioSocketChannel {
 
     volatile PushbackInputStream in;
@@ -37,7 +23,9 @@ class OioClientSocketChannel extends OioSocketChannel {
 
         super(null, factory, pipeline, sink, new Socket());
 
-        fireChannelOpen(this);
+        //发送"channelOpen"事件给该通道的流水线中第一个ChannelUpstreamHandler
+    	//如果这个Channel有parent，那么一个"childChannelOpen"事件也会发射
+        fireChannelOpen(this);//-->Channels
     }
 
     @Override
