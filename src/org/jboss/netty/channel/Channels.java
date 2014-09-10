@@ -68,23 +68,14 @@ public final class Channels {
 		};
 	}
 
-	// future factory methods
+	// future工厂方法
 
-	/**
-	 * Creates a new non-cancellable {@link ChannelFuture} for the specified
-	 * {@link Channel}.
-	 */
+	//为指定的Channel创建一个不可取消的（non-cancellable）hannelFuturefor
 	public static ChannelFuture future(Channel channel) {
 		return future(channel, false);
 	}
 
-	/**
-	 * Creates a new {@link ChannelFuture} for the specified {@link Channel}.
-	 * 
-	 * @param cancellable
-	 *            {@code true} if and only if the returned future can be
-	 *            canceled by {@link ChannelFuture#cancel()}
-	 */
+	//参数可取消的意思是，返回的Future可以调用其cancel()方法，取消和这个Future关联的IO操作
 	public static ChannelFuture future(Channel channel, boolean cancellable) {
 		return new DefaultChannelFuture(channel, cancellable);
 	}
@@ -523,7 +514,9 @@ public final class Channels {
 		if (localAddress == null) {
 			throw new NullPointerException("localAddress");
 		}
+		//创建一个不可取消的ChannelFuture
 		ChannelFuture future = future(channel);
+		//应该是发送给传输实现层来处理，ChannelSink，状态时BOUND，值是LocalAddress
 		channel.getPipeline().sendDownstream(
 				new DownstreamChannelStateEvent(channel, future,
 						ChannelState.BOUND, localAddress));
