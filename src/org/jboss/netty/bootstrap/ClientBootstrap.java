@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.bootstrap;
 
 import org.jboss.netty.channel.Channel;
@@ -29,121 +14,28 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 /**
- * A helper class which creates a new client-side {@link Channel} and makes a
- * connection attempt.
- *
- * <h3>Configuring a channel</h3>
- *
- * {@link #setOption(String, Object) Options} are used to configure a channel:
- *
- * <pre>
- * {@link ClientBootstrap} b = ...;
- *
- * // Options for a new channel
- * b.setOption("remoteAddress", new {@link InetSocketAddress}("example.com", 8080));
- * b.setOption("tcpNoDelay", true);
- * b.setOption("receiveBufferSize", 1048576);
- * </pre>
- *
- * For the detailed list of available options, please refer to
- * {@link ChannelConfig} and its sub-types.
- *
- * <h3>Configuring a channel pipeline</h3>
- *
- * Every channel has its own {@link ChannelPipeline} and you can configure it
- * in two ways.
- *
- * The recommended approach is to specify a {@link ChannelPipelineFactory} by
- * calling {@link #setPipelineFactory(ChannelPipelineFactory)}.
- *
- * <pre>
- * {@link ClientBootstrap} b = ...;
- * b.setPipelineFactory(new MyPipelineFactory());
- *
- * public class MyPipelineFactory implements {@link ChannelPipelineFactory} {
- *   public {@link ChannelPipeline} getPipeline() throws Exception {
- *     // Create and configure a new pipeline for a new channel.
- *     {@link ChannelPipeline} p = {@link Channels}.pipeline();
- *     p.addLast("encoder", new EncodingHandler());
- *     p.addLast("decoder", new DecodingHandler());
- *     p.addLast("logic",   new LogicHandler());
- *     return p;
- *   }
- * }
- * </pre>
-
- * <p>
- * The alternative approach, which works only in a certain situation, is to use
- * the default pipeline and let the bootstrap to shallow-copy the default
- * pipeline for each new channel:
- *
- * <pre>
- * {@link ClientBootstrap} b = ...;
- * {@link ChannelPipeline} p = b.getPipeline();
- *
- * // Add handlers to the default pipeline.
- * p.addLast("encoder", new EncodingHandler());
- * p.addLast("decoder", new DecodingHandler());
- * p.addLast("logic",   new LogicHandler());
- * </pre>
- *
- * Please note 'shallow-copy' here means that the added {@link ChannelHandler}s
- * are not cloned but only their references are added to the new pipeline.
- * Therefore, you cannot use this approach if you are going to open more than
- * one {@link Channel}s or run a server that accepts incoming connections to
- * create its child channels.
- *
- * <h3>Applying different settings for different {@link Channel}s</h3>
- *
- * {@link ClientBootstrap} is just a helper class.  It neither allocates nor
- * manages any resources.  What manages the resources is the
- * {@link ChannelFactory} implementation you specified in the constructor of
- * {@link ClientBootstrap}.  Therefore, it is OK to create as many
- * {@link ClientBootstrap} instances as you want with the same
- * {@link ChannelFactory} to apply different settings for different
- * {@link Channel}s.
- *
- * @apiviz.landmark
+ * 客户端Channel辅助类
  */
 public class ClientBootstrap extends Bootstrap {
 
     /**
-     * Creates a new instance with no {@link ChannelFactory} set.
-     * {@link #setFactory(ChannelFactory)} must be called before any I/O
-     * operation is requested.
+     * 没有设置ChannelFactory，在IO请求之前要setFactory(ChannelFactory)
      */
     public ClientBootstrap() {
     }
 
     /**
-     * Creates a new instance with the specified initial {@link ChannelFactory}.
+     * 用指定的 ChannelFactory来创建实例.
      */
     public ClientBootstrap(ChannelFactory channelFactory) {
         super(channelFactory);
     }
 
     /**
-     * Attempts a new connection with the current {@code "remoteAddress"} and
-     * {@code "localAddress"} option.  If the {@code "localAddress"} option is
-     * not set, the local address of a new channel is determined automatically.
-     * This method is similar to the following code:
-     *
-     * <pre>
-     * {@link ClientBootstrap} b = ...;
-     * b.connect(b.getOption("remoteAddress"), b.getOption("localAddress"));
-     * </pre>
-     *
-     * @return a future object which notifies when this connection attempt
-     *         succeeds or fails
-     *
-     * @throws IllegalStateException
-     *         if {@code "remoteAddress"} option was not set
-     * @throws ClassCastException
-     *         if {@code "remoteAddress"} or {@code "localAddress"} option's
-     *            value is neither a {@link SocketAddress} nor {@code null}
-     * @throws ChannelPipelineException
-     *         if this bootstrap's {@link #setPipelineFactory(ChannelPipelineFactory) pipelineFactory}
-     *            failed to create a new {@link ChannelPipeline}
+     * 通过和"localAddress"的配置来connect，
+     * 如果"localAddress"没有 设置，则会自动分配
+     * 如果"remoteAddress"没有的话就会抛出IllegalStateException
+     * 如果创建ChannelPipeline失败，则ChannelPipelineException
      */
     public ChannelFuture connect() {
         SocketAddress remoteAddress = (SocketAddress) getOption("remoteAddress");
@@ -154,25 +46,8 @@ public class ClientBootstrap extends Bootstrap {
     }
 
     /**
-     * Attempts a new connection with the specified {@code remoteAddress} and
-     * the current {@code "localAddress"} option. If the {@code "localAddress"}
-     * option is not set, the local address of a new channel is determined
-     * automatically.  This method is identical with the following code:
-     *
-     * <pre>
-     * {@link ClientBootstrap} b = ...;
-     * b.connect(remoteAddress, b.getOption("localAddress"));
-     * </pre>
-     *
-     * @return a future object which notifies when this connection attempt
-     *         succeeds or fails
-     *
-     * @throws ClassCastException
-     *         if {@code "localAddress"} option's value is
-     *            neither a {@link SocketAddress} nor {@code null}
-     * @throws ChannelPipelineException
-     *         if this bootstrap's {@link #setPipelineFactory(ChannelPipelineFactory) pipelineFactory}
-     *            failed to create a new {@link ChannelPipeline}
+     * 如果从选项中得到的localAddress不是SocketAddress类型或者null就会抛出ClassCastException
+     * 其他的同上
      */
     public ChannelFuture connect(SocketAddress remoteAddress) {
         if (remoteAddress == null) {
@@ -183,17 +58,11 @@ public class ClientBootstrap extends Bootstrap {
     }
 
     /**
-     * Attempts a new connection with the specified {@code remoteAddress} and
-     * the specified {@code localAddress}.  If the specified local address is
-     * {@code null}, the local address of a new channel is determined
-     * automatically.
-     *
-     * @return a future object which notifies when this connection attempt
-     *         succeeds or fails
-     *
-     * @throws ChannelPipelineException
-     *         if this bootstrap's {@link #setPipelineFactory(ChannelPipelineFactory) pipelineFactory}
-     *            failed to create a new {@link ChannelPipeline}
+     * 尝试和对端连接，如果 localAddress=null，本机套接字地址就自动分配；
+     * 
+     * 当连接尝试成功或失败后 ChannelFuture 会获得通知；
+     * 
+     *  如果创建ChannelPipeline失败，则ChannelPipelineException
      */
     public ChannelFuture connect(final SocketAddress remoteAddress, final SocketAddress localAddress) {
 
@@ -203,15 +72,18 @@ public class ClientBootstrap extends Bootstrap {
 
         ChannelPipeline pipeline;
         try {
+        	//先由pipeline Factory得到一个流水线
             pipeline = getPipelineFactory().getPipeline();
         } catch (Exception e) {
             throw new ChannelPipelineException("Failed to initialize a pipeline.", e);
         }
 
-        // Set the options.
+        //Set the options.
+        //ChannelFactory根据指定的pipeline创建一个通道，创建的时候就会打开，看OioClientSocketChannel
         Channel ch = getFactory().newChannel(pipeline);
         boolean success = false;
         try {
+        	// 配置通道
             ch.getConfig().setOptions(getOptions());
             success = true;
         } finally {
@@ -220,6 +92,7 @@ public class ClientBootstrap extends Bootstrap {
             }
         }
 
+        //这里的绑定，连接都是有AbstractChannel实现的-通过Channels中的静态方法；
         // Bind.
         if (localAddress != null) {
             ch.bind(localAddress);
@@ -230,38 +103,9 @@ public class ClientBootstrap extends Bootstrap {
     }
 
     /**
-     * Attempts to bind a channel with the specified {@code localAddress}. later the channel can
-     * be connected to a remoteAddress by calling {@link Channel#connect(SocketAddress)}.This method
-     * is useful where bind and connect need to be done in separate steps.
-     * <p>
-     * For an instance, a user can set an attachment to the {@link Channel} via
-     * {@link Channel#setAttachment(Object)} before beginning a connection attempt so that the user can access
-     * the attachment once the connection is established:
-     *
-     * <pre>
-     *  ChannelFuture bindFuture = bootstrap.bind(new InetSocketAddress("192.168.0.15", 0));
-     *  Channel channel = bindFuture.getChannel();
-     *  channel.setAttachment(dataObj);
-     *  channel.connect(new InetSocketAddress("192.168.0.30", 8080));
-     * </pre>
-     *
-     * The attachment can be accessed then in the handler like the following:
-     *
-     * <pre>
-     *  public class YourHandler extends SimpleChannelUpstreamHandler {
-     *      public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-     *          Object dataObject = ctx.getChannel().getAttachment();
-     *      }
-     *  }
-     *
-     * </pre>
-     *
-     * @return a future object which notifies when this bind attempt
-     *         succeeds or fails
-     *
-     * @throws ChannelPipelineException
-     *         if this bootstrap's {@link #setPipelineFactory(ChannelPipelineFactory) pipelineFactory}
-     *            failed to create a new {@link ChannelPipeline}
+     * 绑定操作，在绑定和连接需要分开的时候用到。
+     * 比如在尝试连接之前，可以通过Channel.setAttachment(Object)为这个通道设置一个attachment
+     * 这样一旦连接建议，就可以访问这个attachment
      */
     public ChannelFuture bind(final SocketAddress localAddress) {
 
