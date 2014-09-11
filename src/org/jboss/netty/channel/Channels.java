@@ -39,10 +39,12 @@ public final class Channels {
 	}
 
 	/**
-	 * Creates a new {@link ChannelPipeline} which contains the same entries
-	 * with the specified {@code pipeline}. Please note that only the names and
-	 * the references of the {@link ChannelHandler}s will be copied; a new
-	 * {@link ChannelHandler} instance will never be created.
+	 * Creates a new ChannelPipeline which contains the same entries
+	 * with the specified pipeline. Please note that only the names and
+	 * the references of the ChannelHandlers will be copied; a new
+	 * ChannelHandler instance will never be created.
+	 * 创建一个新的ChannelPipeline，要参数中指定的pipeline包含相同的属性
+	 * 只有pipeline的名字和Handler的引用会复制，而不会创建新的Handler实例
 	 */
 	public static ChannelPipeline pipeline(ChannelPipeline pipeline) {
 		ChannelPipeline newPipeline = pipeline();
@@ -52,13 +54,7 @@ public final class Channels {
 		return newPipeline;
 	}
 
-	/**
-	 * Creates a new {@link ChannelPipelineFactory} which creates a new
-	 * {@link ChannelPipeline} which contains the same entries with the
-	 * specified {@code pipeline}. Please note that only the names and the
-	 * references of the {@link ChannelHandler}s will be copied; a new
-	 * {@link ChannelHandler} instance will never be created.
-	 */
+	// 创建一个工厂，产生的pipeline与给定参数的属性相同，看上面
 	public static ChannelPipelineFactory pipelineFactory(
 			final ChannelPipeline pipeline) {
 		return new ChannelPipelineFactory() {

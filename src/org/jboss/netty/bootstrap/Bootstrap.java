@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.bootstrap;
 
 import org.jboss.netty.channel.Channel;
@@ -33,45 +18,32 @@ import java.util.TreeMap;
 import static org.jboss.netty.channel.Channels.*;
 
 /**
- * A helper class which initializes a {@link Channel}.  This class provides
- * the common data structure for its subclasses which actually initialize
- * {@link Channel}s and their child {@link Channel}s using the common data
- * structure.  Please refer to {@link ClientBootstrap}, {@link ServerBootstrap},
- * and {@link ConnectionlessBootstrap} for client side, server-side, and
- * connectionless (e.g. UDP) channel initialization respectively.
- *
- * @apiviz.uses org.jboss.netty.channel.ChannelFactory
+ * 通道初始化辅助类
+ * 提供了初始化通道或子通道所需要的数据结构
  */
 public class Bootstrap implements ExternalResourceReleasable {
 
     private volatile ChannelFactory factory;
     private volatile ChannelPipeline pipeline = pipeline();
+    //创建一个ChannelPipeline，而后这个factory产生的pipeline也和它的属性相同（引用复制）
     private volatile ChannelPipelineFactory pipelineFactory = pipelineFactory(pipeline);
     private volatile Map<String, Object> options = new HashMap<String, Object>();
 
-    /**
-     * Creates a new instance with no {@link ChannelFactory} set.
-     * {@link #setFactory(ChannelFactory)} must be called at once before any
-     * I/O operation is requested.
-     */
+    //没有指定ChannelFactory，在执行IO操作之前必须调用setFactory(ChannelFactory)设置
     protected Bootstrap() {
     }
 
     /**
-     * Creates a new instance with the specified initial {@link ChannelFactory}.
+     * Creates a new instance with the specified initial ChannelFactory.
      */
     protected Bootstrap(ChannelFactory channelFactory) {
         setFactory(channelFactory);
     }
 
     /**
-     * Returns the {@link ChannelFactory} that will be used to perform an
-     * I/O operation.
+     * 返回这个将用来执行真正IO操作的ChannelFactory
      *
-     * @throws IllegalStateException
-     *         if the factory is not set for this bootstrap yet.
-     *         The factory can be set in the constructor or
-     *         {@link #setFactory(ChannelFactory)}.
+     *如果还没指定ChannelFactory，就抛出IllegalStateException异常
      */
     public ChannelFactory getFactory() {
         ChannelFactory factory = this.factory;
@@ -83,12 +55,9 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
-     * Sets the {@link ChannelFactory} that will be used to perform an I/O
-     * operation.  This method can be called only once and can't be called at
-     * all if the factory was specified in the constructor.
-     *
-     * @throws IllegalStateException
-     *         if the factory is already set
+     * 设置ChannelFactory
+     * 该方法只能被调用一次
+     * 而且在构造阶段没有设置的情况下，否则抛出IllegalStateException
      */
     public void setFactory(ChannelFactory factory) {
         if (factory == null) {
