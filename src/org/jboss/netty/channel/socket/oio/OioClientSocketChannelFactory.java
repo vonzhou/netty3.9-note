@@ -30,7 +30,7 @@ import org.jboss.netty.util.internal.ExecutorUtil;
 public class OioClientSocketChannelFactory implements ClientSocketChannelFactory {
 
     private final Executor workerExecutor;
-    final OioClientSocketPipelineSink sink;///
+    final OioClientSocketPipelineSink sink;///？？
     private boolean shutdownExecutor;
 
     /**
@@ -75,6 +75,9 @@ public class OioClientSocketChannelFactory implements ClientSocketChannelFactory
         }
     }
 
+    /**
+     * 调用ExcutorService的shutdownNow方法
+     */
     public void releaseExternalResources() {
         ExecutorUtil.shutdownNow(workerExecutor);
     }

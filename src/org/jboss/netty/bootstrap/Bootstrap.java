@@ -1,6 +1,5 @@
 package org.jboss.netty.bootstrap;
 
-import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
@@ -27,6 +26,7 @@ public class Bootstrap implements ExternalResourceReleasable {
     private volatile ChannelPipeline pipeline = pipeline();
     //创建一个ChannelPipeline，而后这个factory产生的pipeline也和它的属性相同（引用复制）
     private volatile ChannelPipelineFactory pipelineFactory = pipelineFactory(pipeline);
+    //配置通道的选项
     private volatile Map<String, Object> options = new HashMap<String, Object>();
 
     //没有指定ChannelFactory，在执行IO操作之前必须调用setFactory(ChannelFactory)设置
@@ -71,25 +71,13 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
-     * Returns the default {@link ChannelPipeline} which is cloned when a new
-     * {@link Channel} is created.  {@link Bootstrap} creates a new pipeline
-     * which has the same entries with the returned pipeline for a new
-     * {@link Channel}.
-     * <p>
-     * Please note that this method is a convenience method that works only
-     * when <b>1)</b> you create only one channel from this bootstrap (e.g.
-     * one-time client-side or connectionless channel) or <b>2)</b> all handlers
-     * in the pipeline is stateless.  You have to use
-     * {@link #setPipelineFactory(ChannelPipelineFactory)} if <b>1)</b> your
-     * pipeline contains a stateful {@link ChannelHandler} and <b>2)</b> one or
-     * more channels are going to be created by this bootstrap (e.g. server-side
-     * channels).
-     *
-     * @return the default {@link ChannelPipeline}
-     *
-     * @throws IllegalStateException
-     *         if {@link #setPipelineFactory(ChannelPipelineFactory)} was
-     *         called by a user last time.
+     * 从默认的pipeline克隆而来（a shallow copy of the specified pipeline）
+     * 这个方法只是下面两种情况的便捷方式
+     * 1）这个bootstrap只创建一个Channel（比如一次的客户端，或者无连接通道）
+     * 2）这个pipeline中的Handler都是无状态的
+     * 否则的会就应该使用setPipelineFactory(ChannelPipelineFactory)这个方法，当
+     * 1）这个pipeline包含有状态的Handler（stateful ChannelHandler）
+     * 2）这个bootstrap要创建多个Channel，比如server-side的通道
      */
     public ChannelPipeline getPipeline() {
         ChannelPipeline pipeline = this.pipeline;
@@ -102,22 +90,7 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
-     * Sets the default {@link ChannelPipeline} which is cloned when a new
-     * {@link Channel} is created.  {@link Bootstrap} creates a new pipeline
-     * which has the same entries with the specified pipeline for a new channel.
-     * <p>
-     * Calling this method also sets the {@code pipelineFactory} property to an
-     * internal {@link ChannelPipelineFactory} implementation which returns
-     * a shallow copy of the specified pipeline.
-     * <p>
-     * Please note that this method is a convenience method that works only
-     * when <b>1)</b> you create only one channel from this bootstrap (e.g.
-     * one-time client-side or connectionless channel) or <b>2)</b> all handlers
-     * in the pipeline is stateless.  You have to use
-     * {@link #setPipelineFactory(ChannelPipelineFactory)} if <b>1)</b> your
-     * pipeline contains a stateful {@link ChannelHandler} and <b>2)</b> one or
-     * more channels are going to be created by this bootstrap (e.g. server-side
-     * channels).
+     * 设置这个默认的ChannelPipeline，供上面那样使用
      */
     public void setPipeline(ChannelPipeline pipeline) {
         if (pipeline == null) {
@@ -128,22 +101,11 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
+     * 仍然要注意上面那些问题
+     * 什么是依赖注入友好的方法？？
      * Dependency injection friendly convenience method for
-     * {@link #getPipeline()} which returns the default pipeline of this
+     * getPipeline() which returns the default pipeline of this
      * bootstrap as an ordered map.
-     * <p>
-     * Please note that this method is a convenience method that works only
-     * when <b>1)</b> you create only one channel from this bootstrap (e.g.
-     * one-time client-side or connectionless channel) or <b>2)</b> all handlers
-     * in the pipeline is stateless.  You have to use
-     * {@link #setPipelineFactory(ChannelPipelineFactory)} if <b>1)</b> your
-     * pipeline contains a stateful {@link ChannelHandler} and <b>2)</b> one or
-     * more channels are going to be created by this bootstrap (e.g. server-side
-     * channels).
-     *
-     * @throws IllegalStateException
-     *         if {@link #setPipelineFactory(ChannelPipelineFactory)} was
-     *         called by a user last time.
      */
     public Map<String, ChannelHandler> getPipelineAsMap() {
         ChannelPipeline pipeline = this.pipeline;
@@ -154,21 +116,10 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
+     * 同理
      * Dependency injection friendly convenience method for
-     * {@link #setPipeline(ChannelPipeline)} which sets the default pipeline of
+     * setPipeline(ChannelPipeline) which sets the default pipeline of
      * this bootstrap from an ordered map.
-     * <p>
-     * Please note that this method is a convenience method that works only
-     * when <b>1)</b> you create only one channel from this bootstrap (e.g.
-     * one-time client-side or connectionless channel) or <b>2)</b> all handlers
-     * in the pipeline is stateless.  You have to use
-     * {@link #setPipelineFactory(ChannelPipelineFactory)} if <b>1)</b> your
-     * pipeline contains a stateful {@link ChannelHandler} and <b>2)</b> one or
-     * more channels are going to be created by this bootstrap (e.g. server-side
-     * channels).
-     *
-     * @throws IllegalArgumentException
-     *         if the specified map is not an ordered map
      */
     public void setPipelineAsMap(Map<String, ChannelHandler> pipelineMap) {
         if (pipelineMap == null) {
@@ -191,46 +142,37 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
-     * Returns the {@link ChannelPipelineFactory} which creates a new
-     * {@link ChannelPipeline} for each new {@link Channel}.
-     *
-     * @see #getPipeline()
+     * Returns the ChannelPipelineFactory which creates a new
+     * ChannelPipeline for each new Channel
      */
     public ChannelPipelineFactory getPipelineFactory() {
         return pipelineFactory;
     }
 
     /**
-     * Sets the {@link ChannelPipelineFactory} which creates a new
-     * {@link ChannelPipeline} for each new {@link Channel}.  Calling this
-     * method invalidates the current {@code pipeline} property of this
-     * bootstrap.  Subsequent {@link #getPipeline()} and {@link #getPipelineAsMap()}
-     * calls will raise {@link IllegalStateException}.
-     *
-     * @see #setPipeline(ChannelPipeline)
-     * @see #setPipelineAsMap(Map)
+     * 重要方法
+     * 调用这个方法会让当前的bootstrap的pipeline属性失效，从而接下来的getPipeline()和
+     * getPipelineAsMap()就会抛出异常IllegalStateException
+     * Sets the ChannelPipelineFactory which creates a new
+     * ChannelPipeline for each new Channel.  
      */
     public void setPipelineFactory(ChannelPipelineFactory pipelineFactory) {
         if (pipelineFactory == null) {
             throw new NullPointerException("pipelineFactory");
         }
-        pipeline = null;
+        pipeline = null;//删除这个默认的pipeline
         this.pipelineFactory = pipelineFactory;
     }
 
     /**
-     * Returns the options which configures a new {@link Channel} and its
-     * child {@link Channel}s.  The names of the child {@link Channel} options
-     * are prepended with {@code "child."} (e.g. {@code "child.keepAlive"}).
+     * 取得当前通道和其子通道的配置选项，子通道的名字以"child."开头，如"child.keepAlive"
      */
     public Map<String, Object> getOptions() {
         return new TreeMap<String, Object>(options);
     }
 
     /**
-     * Sets the options which configures a new {@link Channel} and its child
-     * {@link Channel}s.  To set the options of a child {@link Channel}, prepend
-     * {@code "child."} to the option name (e.g. {@code "child.keepAlive"}).
+     *  配置当前通道和其子通道的选项，子通道的名字以"child."开头，如"child.keepAlive"
      */
     public void setOptions(Map<String, Object> options) {
         if (options == null) {
@@ -240,14 +182,7 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
-     * Returns the value of the option with the specified key.  To retrieve
-     * the option value of a child {@link Channel}, prepend {@code "child."}
-     * to the option name (e.g. {@code "child.keepAlive"}).
-     *
-     * @param key  the option name
-     *
-     * @return the option value if the option is found.
-     *         {@code null} otherwise.
+     * 通过键值获得某一个具体的选项，没有则返回null
      */
     public Object getOption(String key) {
         if (key == null) {
@@ -257,14 +192,8 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
-     * Sets an option with the specified key and value.  If there's already
-     * an option with the same key, it is replaced with the new value.  If the
-     * specified value is {@code null}, an existing option with the specified
-     * key is removed.  To set the option value of a child {@link Channel},
-     * prepend {@code "child."} to the option name (e.g. {@code "child.keepAlive"}).
-     *
-     * @param key    the option name
-     * @param value  the option value
+     * 通过键值对来设置选项
+     * 如果已经存在则会覆盖，如果value=null表示会移除这个选项
      */
     public void setOption(String key, Object value) {
         if (key == null) {
@@ -278,8 +207,7 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
-     * This method simply delegates the call to
-     * {@link ChannelFactory#releaseExternalResources()}.
+     * 只是调用ChannelFactory的releaseExternalResources()方法
      */
     public void releaseExternalResources() {
         ChannelFactory factory = this.factory;
@@ -289,8 +217,8 @@ public class Bootstrap implements ExternalResourceReleasable {
     }
 
     /**
-     * This method simply delegates the call to
-     * {@link ChannelFactory#shutdown()}.
+     * 调用ChannelFactory.shutdown()
+     * 就是关闭worker thread
      */
     public void shutdown() {
         ChannelFactory factory = this.factory;
