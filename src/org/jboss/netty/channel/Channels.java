@@ -9,7 +9,7 @@ public final class Channels {
 	// pipeline factory methods
 
 	/**
-	 * Creates a new {@link ChannelPipeline}.
+	 * 创建一个默认的ChannelPipeline.
 	 */
 	public static ChannelPipeline pipeline() {
 		return new DefaultChannelPipeline();
@@ -129,12 +129,8 @@ public final class Channels {
 	}
 
 	/**
-	 * Sends a {@code "channelBound"} event to the first
-	 * {@link ChannelUpstreamHandler} in the {@link ChannelPipeline} of the
-	 * specified {@link Channel}.
-	 * 
-	 * @param localAddress
-	 *            the local address where the specified channel is bound
+	 * 给第一个ChannelUpstreamHandler发送一个"channelBound"的状态事件
+	 * 表明下面套接字绑定成功
 	 */
 	public static void fireChannelBound(Channel channel,
 			SocketAddress localAddress) {

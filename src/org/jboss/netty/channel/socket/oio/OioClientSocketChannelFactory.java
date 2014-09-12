@@ -59,6 +59,7 @@ public class OioClientSocketChannelFactory implements ClientSocketChannelFactory
             throw new NullPointerException("workerExecutor");
         }
         this.workerExecutor = workerExecutor;
+        //下面这个Sink对象，是底层的真正实现；
         sink = new OioClientSocketPipelineSink(workerExecutor, determiner);
     }
 

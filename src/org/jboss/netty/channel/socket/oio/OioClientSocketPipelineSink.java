@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel.socket.oio;
 
 import org.jboss.netty.channel.ChannelEvent;
@@ -33,6 +18,11 @@ import java.util.concurrent.Executor;
 
 import static org.jboss.netty.channel.Channels.*;
 
+/**
+ * 这是OIO模型下，netty和Java socket直接的连接点，传输层的内部实现。
+ * @author vonzhou
+ *
+ */
 class OioClientSocketPipelineSink extends AbstractOioChannelSink {
 
     private final Executor workerExecutor;
@@ -51,6 +41,7 @@ class OioClientSocketPipelineSink extends AbstractOioChannelSink {
             ChannelStateEvent stateEvent = (ChannelStateEvent) e;
             ChannelState state = stateEvent.getState();
             Object value = stateEvent.getValue();
+            //根据state和value确定要执行的动作，结合那张表；
             switch (state) {
             case OPEN:
                 if (Boolean.FALSE.equals(value)) {
@@ -86,8 +77,10 @@ class OioClientSocketPipelineSink extends AbstractOioChannelSink {
             OioClientSocketChannel channel, ChannelFuture future,
             SocketAddress localAddress) {
         try {
+        	//每个通道维护的套接字对象，
             channel.socket.bind(localAddress);
             future.setSuccess();
+            //绑定成功，通知上层
             fireChannelBound(channel, channel.getLocalAddress());
         } catch (Throwable t) {
             future.setFailure(t);
@@ -106,11 +99,12 @@ class OioClientSocketPipelineSink extends AbstractOioChannelSink {
         future.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
 
         try {
+        	//真正的绑定
             channel.socket.connect(
                     remoteAddress, channel.getConfig().getConnectTimeoutMillis());
             connected = true;
 
-            // Obtain I/O stream.
+            // Obtain I/O stream.然后获得对应的输入输出流
             channel.in = new PushbackInputStream(channel.socket.getInputStream(), 1);
             channel.out = channel.socket.getOutputStream();
 
@@ -119,6 +113,7 @@ class OioClientSocketPipelineSink extends AbstractOioChannelSink {
             if (!bound) {
                 fireChannelBound(channel, channel.getLocalAddress());
             }
+            //通知上层
             fireChannelConnected(channel, channel.getRemoteAddress());
 
             // Start the business.

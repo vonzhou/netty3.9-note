@@ -8,6 +8,10 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.socket.ChannelRunnableWrapper;
 import org.jboss.netty.channel.socket.Worker;
 
+/**
+ * OIO模型中每个通道对应的有worker thread，这里就有线程来执行这个任务；
+ * 
+ */
 public abstract class AbstractOioChannelSink extends AbstractChannelSink {
 
     @Override

@@ -35,8 +35,8 @@ public abstract class AbstractChannelSink implements ChannelSink {
     }
 
     /**
-     * This implementation just directly call Runnable.run()
-     * Sub-classes should override this if they can handle it in a better way
+     * 这里直接调用 Runnable.run()来运行这个任务，如果子类型有更好的处理方式就
+     * 覆盖这个方法
      */
     public ChannelFuture execute(ChannelPipeline pipeline, Runnable task) {
         try {

@@ -131,7 +131,6 @@ public class ClientBootstrap extends Bootstrap {
                 ch.close();
             }
         }
-
         // Bind.
         return ch.bind(localAddress);
     }

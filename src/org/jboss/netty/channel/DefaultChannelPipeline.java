@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel;
 
 import org.jboss.netty.logging.InternalLogger;
@@ -27,13 +12,13 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
- * The default {@link ChannelPipeline} implementation.  It is recommended
- * to use {@link Channels#pipeline()} to create a new {@link ChannelPipeline}
- * instance rather than calling the constructor directly.
+ * 默认的ChannelPipeline实现，推荐实现Channels中的pipeline()方法；
+ * 而不是直接调用构造器；
  */
 public class DefaultChannelPipeline implements ChannelPipeline {
 
     static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultChannelPipeline.class);
+    //
     static final ChannelSink discardingSink = new DiscardingChannelSink();
 
     private volatile Channel channel;
@@ -567,6 +552,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    /**
+     * 发送一个事件给最后一个DownstreamHandler执行，
+     * 如果没有的话就有ChannelSink处理；
+     */
     public void sendDownstream(ChannelEvent e) {
         DefaultChannelHandlerContext tail = getActualDownstreamContext(this.tail);
         if (tail == null) {
@@ -582,6 +571,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         sendDownstream(tail, e);
     }
 
+    /**
+     * 发送下行事件，这里指定了由哪个Handler来处理；
+     */
     void sendDownstream(DefaultChannelHandlerContext ctx, ChannelEvent e) {
         if (e instanceof UpstreamMessageEvent) {
             throw new IllegalArgumentException("cannot send an upstream event to downstream");
@@ -616,6 +608,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return realCtx;
     }
 
+    /**
+     * 这个私有方法，是获得从ctx对应的Handler开始，最下面的Handler；
+     * 最下面的Handler是什么呢？？ChannelSink？
+     */
     private DefaultChannelHandlerContext getActualDownstreamContext(DefaultChannelHandlerContext ctx) {
         if (ctx == null) {
             return null;
@@ -623,7 +619,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         DefaultChannelHandlerContext realCtx = ctx;
         while (!realCtx.canHandleDownstream()) {
-            realCtx = realCtx.prev;
+            realCtx = realCtx.prev; //往前遍历
             if (realCtx == null) {
                 return null;
             }
@@ -793,6 +789,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //默认如果不自己设置一个ChannelSink的话，就用这个，啥也不干，不对接收到的事件进行处理。
     private static final class DiscardingChannelSink implements ChannelSink {
         DiscardingChannelSink() {
         }
