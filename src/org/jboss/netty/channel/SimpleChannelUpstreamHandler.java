@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -23,35 +8,8 @@ import java.util.List;
 
 
 /**
- * A {@link ChannelUpstreamHandler} which provides an individual handler method
- * for each event type.  This handler down-casts the received upstream event
- * into more meaningful sub-type event and calls an appropriate handler method
- * with the down-cast event.  The names of the methods are identical to the
- * upstream event names, as introduced in the {@link ChannelEvent} documentation.
- * <p>
- * Please use {@link SimpleChannelHandler} if you need to implement both
- * {@link ChannelUpstreamHandler} and {@link ChannelDownstreamHandler}.
- *
- * <h3>Overriding the {@link #handleUpstream(ChannelHandlerContext, ChannelEvent) handleUpstream} method</h3>
- * <p>
- * You can override the {@link #handleUpstream(ChannelHandlerContext, ChannelEvent) handleUpstream}
- * method just like overriding an ordinary Java method.  Please make sure to
- * call {@code super.handleUpstream()} so that other handler methods are invoked
- * properly:
- * </p>
- * <pre>public class MyChannelHandler extends {@link SimpleChannelUpstreamHandler} {
- *
- *     {@code @Override}
- *     public void handleUpstream({@link ChannelHandlerContext} ctx, {@link ChannelEvent} e) throws Exception {
- *
- *         // Log all channel state changes.
- *         if (e instanceof {@link ChannelStateEvent}) {
- *             logger.info("Channel state changed: " + e);
- *         }
- *
- *         <strong>super.handleUpstream(ctx, e);</strong>
- *     }
- * }</pre>
+ * 对于不同的事件类型都提供了方法。他会进行向下转型这些接收到的 upstream event，
+ * 得到更加有意义的子类型，而后调用适当的处理方法。这些方法的名字和在ChannelEvent中对应的事件名字是一样的。
  */
 public class SimpleChannelUpstreamHandler implements ChannelUpstreamHandler {
 
@@ -59,12 +17,11 @@ public class SimpleChannelUpstreamHandler implements ChannelUpstreamHandler {
         InternalLoggerFactory.getInstance(SimpleChannelUpstreamHandler.class.getName());
 
     /**
-     * {@inheritDoc}  Down-casts the received upstream event into more
-     * meaningful sub-type event and calls an appropriate handler method with
-     * the down-casted event.
+     * 向下转型，具体执行。
+     * Down-casts the received upstream event into more meaningful sub-type 
+     * event and calls an appropriate handler method with the down-casted event.
      */
-    public void handleUpstream(
-            ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
+    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
 
         if (e instanceof MessageEvent) {
             messageReceived(ctx, (MessageEvent) e);
@@ -116,17 +73,14 @@ public class SimpleChannelUpstreamHandler implements ChannelUpstreamHandler {
     }
 
     /**
-     * Invoked when a message object (e.g: {@link ChannelBuffer}) was received
-     * from a remote peer.
+     * 当接从远端收到一个消息实体（如ChannelBuffer）的时候执行。
      */
-    public void messageReceived(
-            ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when an exception was raised by an I/O thread or a
-     * {@link ChannelHandler}.
+     * 当IO线程或ChannelHandler发生异常时。
      */
     public void exceptionCaught(
             ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
@@ -154,70 +108,53 @@ public class SimpleChannelUpstreamHandler implements ChannelUpstreamHandler {
     }
 
     /**
-     * Invoked when a {@link Channel} is open, but not bound nor connected.
-     * <br/>
-     *
-     * <strong>Be aware that this event is fired from within the I/O thread.  You should never
-     * execute any heavy operation in there as it will block the dispatching to other workers!</strong>
+     * 通道打开时，没有绑定或连接。
+     * 注意的是：这个事件是IO线程内部触发的（下面的Binder），我们不能再这里执行复杂操作（heavy operation）
+     * 否则会阻塞向其他worker分发。
      */
-    public void channelOpen(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelOpen( ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when a {@link Channel} is open and bound to a local address,
-     * but not connected.
-     * <br/>
-     *
-     * <strong>Be aware that this event is fired from within the I/O thread.  You should never
-     * execute any heavy operation in there as it will block the dispatching to other workers!</strong>
+     * 打开绑定后执行。
+     * 注意同上。
      */
-    public void channelBound(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when a {@link Channel} is open, bound to a local address, and
-     * connected to a remote address.
-     * <br/>
-     *
-     * <strong>Be aware that this event is fired from within the I/O thread.  You should never
-     * execute any heavy operation in there as it will block the dispatching to other workers!</strong>
+     * 打开，绑定，连接之后执行。
+     * 注意同上。
      */
-    public void channelConnected(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when a {@link Channel}'s {@link Channel#getInterestOps() interestOps}
-     * was changed.
+     * 当通道的interestOps改变后执行。
      */
-    public void channelInterestChanged(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelInterestChanged(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when a {@link Channel} was disconnected from its remote peer.
+     * 断开与远端的连接之时。
      */
-    public void channelDisconnected(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelDisconnected(  ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when a {@link Channel} was unbound from the current local address.
+     * Invoked when a Channel was unbound from the current local address.
      */
-    public void channelUnbound(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelUnbound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when a {@link Channel} was closed and all its related resources
+     * Invoked when a Channel was closed and all its related resources
      * were released.
      */
     public void channelClosed(
@@ -226,28 +163,23 @@ public class SimpleChannelUpstreamHandler implements ChannelUpstreamHandler {
     }
 
     /**
-     * Invoked when something was written into a {@link Channel}.
+     * Invoked when something was written into a Channel.
      */
-    public void writeComplete(
-            ChannelHandlerContext ctx, WriteCompletionEvent e) throws Exception {
+    public void writeComplete(ChannelHandlerContext ctx, WriteCompletionEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when a child {@link Channel} was open.
-     * (e.g. a server channel accepted a connection)
+     * 当子通道打开时，比如说a server channel accepted a connection
      */
-    public void childChannelOpen(
-            ChannelHandlerContext ctx, ChildChannelStateEvent e) throws Exception {
+    public void childChannelOpen(ChannelHandlerContext ctx, ChildChannelStateEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 
     /**
-     * Invoked when a child {@link Channel} was closed.
-     * (e.g. the accepted connection was closed)
+     * 子通道关闭时，比如连接套接字关闭。
      */
-    public void childChannelClosed(
-            ChannelHandlerContext ctx, ChildChannelStateEvent e) throws Exception {
+    public void childChannelClosed(ChannelHandlerContext ctx, ChildChannelStateEvent e) throws Exception {
         ctx.sendUpstream(e);
     }
 }
