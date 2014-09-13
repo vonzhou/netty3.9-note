@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.bootstrap;
 
 import org.jboss.netty.channel.Channel;
@@ -42,147 +27,34 @@ import java.util.Map.Entry;
 import static org.jboss.netty.channel.Channels.*;
 
 /**
- * A helper class which creates a new server-side {@link Channel} and accepts
- * incoming connections.
- *
- * <h3>Only for connection oriented transports</h3>
- *
- * This bootstrap is for connection oriented transports only such as TCP/IP
- * and local transport.  Use {@link ConnectionlessBootstrap} instead for
- * connectionless transports.  Do not use this helper if you are using a
- * connectionless transport such as UDP/IP which does not accept an incoming
- * connection but receives messages by itself without creating a child channel.
- *
- * <h3>Parent channel and its children</h3>
- *
- * A parent channel is a channel which is supposed to accept incoming
- * connections.  It is created by this bootstrap's {@link ChannelFactory} via
- * {@link #bind()} and {@link #bind(SocketAddress)}.
- * <p>
- * Once successfully bound, the parent channel starts to accept incoming
- * connections, and the accepted connections become the children of the
- * parent channel.
- *
- * <h3>Configuring channels</h3>
- *
- * {@link #setOption(String, Object) Options} are used to configure both a
- * parent channel and its child channels.  To configure the child channels,
- * prepend {@code "child."} prefix to the actual option names of a child
- * channel:
- *
- * <pre>
- * {@link ServerBootstrap} b = ...;
- *
- * // Options for a parent channel
- * b.setOption("localAddress", new {@link InetSocketAddress}(8080));
- * b.setOption("reuseAddress", true);
- *
- * // Options for its children
- * b.setOption("child.tcpNoDelay", true);
- * b.setOption("child.receiveBufferSize", 1048576);
- * </pre>
- *
- * For the detailed list of available options, please refer to
- * {@link ChannelConfig} and its sub-types.
- *
- * <h3>Configuring a parent channel pipeline</h3>
- *
- * It is rare to customize the pipeline of a parent channel because what it is
- * supposed to do is very typical.  However, you might want to add a handler
- * to deal with some special needs such as degrading the process
- * <a href="http://en.wikipedia.org/wiki/User_identifier_(Unix)">UID</a> from
- * a <a href="http://en.wikipedia.org/wiki/Superuser">superuser</a> to a
- * normal user and changing the current VM security manager for better
- * security.  To support such a case,
- * the {@link #setParentHandler(ChannelHandler) parentHandler} property is
- * provided.
- *
- * <h3>Configuring a child channel pipeline</h3>
- *
- * Every channel has its own {@link ChannelPipeline} and you can configure it
- * in two ways.
- *
- * The recommended approach is to specify a {@link ChannelPipelineFactory} by
- * calling {@link #setPipelineFactory(ChannelPipelineFactory)}.
- *
- * <pre>
- * {@link ServerBootstrap} b = ...;
- * b.setPipelineFactory(new MyPipelineFactory());
- *
- * public class MyPipelineFactory implements {@link ChannelPipelineFactory} {
- *   public {@link ChannelPipeline} getPipeline() throws Exception {
- *     // Create and configure a new pipeline for a new channel.
- *     {@link ChannelPipeline} p = {@link Channels}.pipeline();
- *     p.addLast("encoder", new EncodingHandler());
- *     p.addLast("decoder", new DecodingHandler());
- *     p.addLast("logic",   new LogicHandler());
- *     return p;
- *   }
- * }
- * </pre>
-
- * <p>
- * The alternative approach, which works only in a certain situation, is to use
- * the default pipeline and let the bootstrap to shallow-copy the default
- * pipeline for each new channel:
- *
- * <pre>
- * {@link ServerBootstrap} b = ...;
- * {@link ChannelPipeline} p = b.getPipeline();
- *
- * // Add handlers to the default pipeline.
- * p.addLast("encoder", new EncodingHandler());
- * p.addLast("decoder", new DecodingHandler());
- * p.addLast("logic",   new LogicHandler());
- * </pre>
- *
- * Please note 'shallow-copy' here means that the added {@link ChannelHandler}s
- * are not cloned but only their references are added to the new pipeline.
- * Therefore, you cannot use this approach if you are going to open more than
- * one {@link Channel}s or run a server that accepts incoming connections to
- * create its child channels.
- *
- * <h3>Applying different settings for different {@link Channel}s</h3>
- *
- * {@link ServerBootstrap} is just a helper class.  It neither allocates nor
- * manages any resources.  What manages the resources is the
- * {@link ChannelFactory} implementation you specified in the constructor of
- * {@link ServerBootstrap}.  Therefore, it is OK to create as many
- * {@link ServerBootstrap} instances as you want with the same
- * {@link ChannelFactory} to apply different settings for different
- * {@link Channel}s.
- *
- * @apiviz.landmark
+ * 和前面ClientBootstrap对应的，这里是服务器端的启动器，ServerBootsrap只针对于面向连接的传输，
+ * 如TCP和local transport。如果是如UDP无连接的传输应该用ConnectionlessBootstrap，
+ * 因为对于UDP而言对到达的连接请求直接接收消息，而不是创建一个子通道来服务每个客户。
+ * 在服务器端，一个父通道指的是监听套接字对应的通道，接收连接请求，parent channel 是通过
+ * 该bootstrap的ChannelFactory 调用bind而生成的。一旦成功绑定，
+ * 这个parent Channel就可以接受请求，对应的就创建子通道。
  */
 public class ServerBootstrap extends Bootstrap {
 
     private volatile ChannelHandler parentHandler;
 
     /**
-     * Creates a new instance with no {@link ChannelFactory} set.
-     * {@link #setFactory(ChannelFactory)} must be called before any I/O
-     * operation is requested.
+     * Creates a new instance with no ChannelFactory  set.
+     *  setFactory(ChannelFactory)  must be called before any I/O operation is requested.
      */
     public ServerBootstrap() {
     }
 
     /**
-     * Creates a new instance with the specified initial {@link ChannelFactory}.
+     * Creates a new instance with the specified initial ChannelFactory.
      */
     public ServerBootstrap(ChannelFactory channelFactory) {
         super(channelFactory);
     }
 
     /**
-     * Sets the {@link ServerChannelFactory} that will be used to perform an I/O
-     * operation.  This method can be called only once and can't be called at
-     * all if the factory was specified in the constructor.
-     *
-     * @throws IllegalStateException
-     *         if the factory is already set
-     * @throws IllegalArgumentException
-     *         if the specified {@code factory} is not a
-     *         {@link ServerChannelFactory}
+     * 设置server端的ServerChannelFactory，用来执行IO操作。
+     * 该方法只能被调用一次，如果构造函数指定了，就不能再次设定。
      */
     @Override
     public void setFactory(ChannelFactory factory) {
@@ -222,27 +94,8 @@ public class ServerBootstrap extends Bootstrap {
     }
 
     /**
-     * Creates a new channel which is bound to the local address which was
-     * specified in the current {@code "localAddress"} option.  This method is
-     * similar to the following code:
-     *
-     * <pre>
-     * {@link ServerBootstrap} b = ...;
-     * b.bind(b.getOption("localAddress"));
-     * </pre>
-     *
-     * This operation will block until the channel is bound.
-     *
-     * @return a new bound channel which accepts incoming connections
-     *
-     * @throws IllegalStateException
-     *         if {@code "localAddress"} option was not set
-     * @throws ClassCastException
-     *         if {@code "localAddress"} option's value is
-     *         neither a {@link SocketAddress} nor {@code null}
-     * @throws ChannelException
-     *         if failed to create a new channel and
-     *                      bind it to the local address
+     * 创建一个Channel，会绑定到选项"localAddress"指定的套接字地址；
+     * 该操作会阻塞，直到通道被绑定；
      */
     public Channel bind() {
         SocketAddress localAddress = (SocketAddress) getOption("localAddress");
@@ -253,14 +106,7 @@ public class ServerBootstrap extends Bootstrap {
     }
 
     /**
-     * Creates a new channel which is bound to the specified local address. This operation will block until
-     * the channel is bound.
-     *
-     * @return a new bound channel which accepts incoming connections
-     *
-     * @throws ChannelException
-     *         if failed to create a new channel and
-     *                      bind it to the local address
+     * 同上，只是绑定的时候指定地址；
      */
     public Channel bind(final SocketAddress localAddress) {
         ChannelFuture future = bindAsync(localAddress);
@@ -307,10 +153,10 @@ public class ServerBootstrap extends Bootstrap {
     }
 
     /**
+     * 异步的来执行通道绑定；
      * Bind a channel asynchronous to the specified local address.
      *
-     * @return a new {@link ChannelFuture} which will be notified once the Channel is
-     * bound and accepts incoming connections
+     *返回的ChannelFuture用来在通道绑定成功（可以接受连接请求）后得到通知；
      *
      */
     public ChannelFuture bindAsync(final SocketAddress localAddress) {
@@ -321,11 +167,13 @@ public class ServerBootstrap extends Bootstrap {
         ChannelHandler parentHandler = getParentHandler();
 
         ChannelPipeline bossPipeline = pipeline();
+        // 注意这里，这个主通道流水线增加了一个binder对象；
         bossPipeline.addLast("binder", binder);
         if (parentHandler != null) {
             bossPipeline.addLast("userHandler", parentHandler);
         }
 
+        // 创建主通道，关联的pipeline是bossPipeline；
         Channel channel = getFactory().newChannel(bossPipeline);
         final ChannelFuture bfuture = new DefaultChannelFuture(channel, false);
         binder.bindFuture.addListener(new ChannelFutureListener() {
