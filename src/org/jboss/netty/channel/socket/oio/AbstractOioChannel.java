@@ -18,6 +18,7 @@ abstract class AbstractOioChannel extends AbstractChannel {
     volatile Thread workerThread;
     volatile Worker worker;
 
+    // ·ÃÎÊinterestOps µÄËø
     final Object interestOpsLock = new Object();
 
     AbstractOioChannel(

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel.socket.oio;
 
 import org.jboss.netty.channel.Channel;
@@ -28,17 +13,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static org.jboss.netty.channel.Channels.*;
 
 /**
+ * OIO模型下任务分发，基本实现；
+ * 每个Worker是依赖于相应Channel的；
  * Abstract base class for Oio-Worker implementations
  *
  * @param <C> {@link AbstractOioChannel}
  */
 abstract class AbstractOioWorker<C extends AbstractOioChannel> implements Worker {
 
+	// 所有的任务在这里排队；
     private final Queue<Runnable> eventQueue = new ConcurrentLinkedQueue<Runnable>();
-
+    // 所属的Channel；
     protected final C channel;
 
     /**
+     * 当worker启动之后，用该字段引用真正的线程；
      * If this worker has been started thread will be a reference to the thread
      * used when starting. i.e. the current thread when the run method is executed.
      */
@@ -59,6 +48,7 @@ abstract class AbstractOioWorker<C extends AbstractOioChannel> implements Worker
                     try {
                         // notify() is not called at all.
                         // close() and setInterestOps() calls Thread.interrupt()
+                    	//OIO模型下不可读就等待
                         channel.interestOpsLock.wait();
                     } catch (InterruptedException e) {
                         if (!channel.isOpen()) {
@@ -70,8 +60,10 @@ abstract class AbstractOioWorker<C extends AbstractOioChannel> implements Worker
 
             boolean cont = false;
             try {
+            	//真正的处理读取到的数据；
                 cont = process();
             } catch (Throwable t) {
+            	// 看是否是socket超时异常；
                 boolean readTimeout = t instanceof SocketTimeoutException;
                 if (!readTimeout && !channel.isSocketClosed()) {
                     fireExceptionCaught(channel, t);
@@ -82,6 +74,7 @@ abstract class AbstractOioWorker<C extends AbstractOioChannel> implements Worker
                     cont = true;
                 }
             } finally {
+            	// 最终统一处理队列中的事件；
                 processEventQueue();
             }
 
@@ -90,13 +83,15 @@ abstract class AbstractOioWorker<C extends AbstractOioChannel> implements Worker
             }
         }
 
+        //interestOpsLock相当于Channel的锁，每次访问其字段，就要枷锁；
         synchronized (channel.interestOpsLock) {
             // Setting the workerThread to null will prevent any channel
             // operations from interrupting this thread from now on.
-            //
+            //也就是说线程已经开始执行，不会受Channel来管理了。
             //
             // Do this while holding the lock to not race with close(...) or
             // setInterestOps(...)
+        	//这里的精髓还没有理解；
             channel.workerThread = null;
         }
 
@@ -115,14 +110,17 @@ abstract class AbstractOioWorker<C extends AbstractOioChannel> implements Worker
         return Thread.currentThread() == channel.workerThread;
     }
 
+   
     public void executeInIoThread(Runnable task) {
         // check if the current thread is the worker thread
         //
         // Also check if the event loop of the worker is complete. If so we need to run the task now.
         // See #287
+    	// 也就是说轮到这个线程通道运行，并且没有其他任务可做，就立即执行。
         if (Thread.currentThread() == thread || done) {
             task.run();
         } else {
+        	// 负责添加到任务队列；
             boolean added = eventQueue.offer(task);
 
             if (added) {
@@ -142,13 +140,11 @@ abstract class AbstractOioWorker<C extends AbstractOioChannel> implements Worker
     }
 
     /**
-     * Process the incoming messages and also is responsible for call
-     * {@link Channels#fireMessageReceived(Channel, Object)} once a message was processed without
-     * errors.
-     *
-     * @return continue returns {@code true} as long as this worker should continue to try
-     *         processing incoming messages
-     * @throws IOException
+     * 这个抽象方法是核心；可以看到编程思想，每次一个层次把能做的就做完，否则
+     * 把权力留给上层具体的类；
+     * 处理来的消息，并且负责在没有出错的时候调用Channels.ireMessageReceived(Channel, Object)
+     * 
+     * 返回值，表示这个worker是否继续处理incoming messages。
      */
     abstract boolean process() throws IOException;
 
