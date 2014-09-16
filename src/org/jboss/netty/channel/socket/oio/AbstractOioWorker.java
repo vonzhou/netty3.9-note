@@ -22,6 +22,7 @@ import static org.jboss.netty.channel.Channels.*;
 abstract class AbstractOioWorker<C extends AbstractOioChannel> implements Worker {
 
 	// 所有的任务在这里排队；
+	//没有设置工作队列的大小，注意。
     private final Queue<Runnable> eventQueue = new ConcurrentLinkedQueue<Runnable>();
     // 所属的Channel；
     protected final C channel;

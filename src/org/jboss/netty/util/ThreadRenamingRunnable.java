@@ -94,6 +94,7 @@ public class ThreadRenamingRunnable implements Runnable {
         boolean renamed = false;
         if (!oldThreadName.equals(newThreadName)) {
             try {
+            	// 设置线程的名字；
                 currentThread.setName(newThreadName);
                 renamed = true;
             } catch (SecurityException e) {
@@ -108,6 +109,7 @@ public class ThreadRenamingRunnable implements Runnable {
             runnable.run();
         } finally {
             if (renamed) {
+            	// 恢复线程的原有名字
                 // Revert the name back if the current thread was renamed.
                 // We do not check the exception here because we know it works.
                 currentThread.setName(oldThreadName);

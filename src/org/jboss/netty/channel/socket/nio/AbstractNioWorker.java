@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel.socket.nio;
 
 import org.jboss.netty.channel.Channel;
@@ -42,6 +27,7 @@ import static org.jboss.netty.channel.Channels.*;
 
 abstract class AbstractNioWorker extends AbstractNioSelector implements Worker {
 
+	// ？？
     protected final SocketSendBufferPool sendBufferPool = new SocketSendBufferPool();
 
     AbstractNioWorker(Executor executor) {
@@ -57,10 +43,7 @@ abstract class AbstractNioWorker extends AbstractNioSelector implements Worker {
     }
 
     /**
-     * Execute the {@link Runnable} in a IO-Thread
-     *
-     * @param task
-     *            the {@link Runnable} to execute
+     * 在IO线程中执行这个任务，alwaysAsync指明是否是异步方式。
      * @param alwaysAsync
      *            {@code true} if the {@link Runnable} should be executed
      *            in an async fashion even if the current Thread == IO Thread
@@ -69,6 +52,7 @@ abstract class AbstractNioWorker extends AbstractNioSelector implements Worker {
         if (!alwaysAsync && isIoThread()) {
             task.run();
         } else {
+        	// 否则加入工作队列。
             registerTask(task);
         }
     }
@@ -103,6 +87,7 @@ abstract class AbstractNioWorker extends AbstractNioSelector implements Worker {
             SelectionKey k = i.next();
             i.remove();
             try {
+            	//获取这个SelectionKey的就绪操作集合。
                 int readyOps = k.readyOps();
                 if ((readyOps & SelectionKey.OP_READ) != 0 || readyOps == 0) {
                     if (!read(k)) {

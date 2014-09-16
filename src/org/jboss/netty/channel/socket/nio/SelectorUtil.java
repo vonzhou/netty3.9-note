@@ -65,6 +65,8 @@ final class SelectorUtil {
 
     static int select(Selector selector) throws IOException {
         try {
+        	//×èÈûÖ±µ½³¬Ê±£¬500s¡£
+        	//Selects a set of keys whose corresponding channels are ready for I/O operations. 
             return selector.select(SELECT_TIMEOUT);
         } catch (CancelledKeyException e) {
             if (logger.isDebugEnabled()) {

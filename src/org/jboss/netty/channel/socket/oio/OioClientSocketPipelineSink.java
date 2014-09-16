@@ -116,7 +116,7 @@ class OioClientSocketPipelineSink extends AbstractOioChannelSink {
             //通知上层
             fireChannelConnected(channel, channel.getRemoteAddress());
 
-            // Start the business.
+            // Start the business.重点
             DeadLockProofWorker.start(
                     workerExecutor,
                     new ThreadRenamingRunnable(

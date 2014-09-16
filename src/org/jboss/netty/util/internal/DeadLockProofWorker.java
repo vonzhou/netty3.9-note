@@ -1,23 +1,10 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.util.internal;
 
 import java.util.concurrent.Executor;
 
 /**
+ * 一个辅助的内部类，可以防死锁，只是一个静态的start方法，
+ * 用任务执行器去执行相应的任务，注意那个ThreadLocal对象的使用。
  */
 public final class DeadLockProofWorker {
 
@@ -37,6 +24,8 @@ public final class DeadLockProofWorker {
 
         parent.execute(new Runnable() {
             public void run() {
+            	//每个线程在执行的时候，设置自己的ThreadLocal副本为它的任务执行器，
+            	// 执行完成后移除，这样在具体的Runnable中就可以获得对应的Excutor。
                 PARENT.set(parent);
                 try {
                     runnable.run();
@@ -47,6 +36,9 @@ public final class DeadLockProofWorker {
         });
     }
 
+    /**
+     * 私有的构造器。
+     */
     private DeadLockProofWorker() {
     }
 }

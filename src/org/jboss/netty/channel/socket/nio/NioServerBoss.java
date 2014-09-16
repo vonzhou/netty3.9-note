@@ -65,6 +65,7 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
 
         try {
             channel.socket.close();
+            // 增加那些取消的 SelectionKey计数，定期清理。
             increaseCancelledKeys();
 
             if (channel.setClosed()) {
