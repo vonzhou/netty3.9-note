@@ -95,7 +95,6 @@ public class ServerBootstrap extends Bootstrap {
 
     /**
      * 创建一个Channel，会绑定到选项"localAddress"指定的套接字地址；
-     * 该操作会阻塞，直到通道被绑定；
      */
     public Channel bind() {
         SocketAddress localAddress = (SocketAddress) getOption("localAddress");
@@ -112,7 +111,7 @@ public class ServerBootstrap extends Bootstrap {
         ChannelFuture future = bindAsync(localAddress);
 
         // Wait for the future.
-        future.awaitUninterruptibly();
+        future.awaitUninterruptibly();// 等待ChannelFuture完成。
         if (!future.isSuccess()) {
             future.getChannel().close().awaitUninterruptibly();
             throw new ChannelException("Failed to bind to: " + localAddress, future.getCause());
@@ -166,16 +165,22 @@ public class ServerBootstrap extends Bootstrap {
         Binder binder = new Binder(localAddress);
         ChannelHandler parentHandler = getParentHandler();
 
-        ChannelPipeline bossPipeline = pipeline();
+        ChannelPipeline bossPipeline = pipeline(); //创建一个默认的Pipeline。
         // 注意这里，这个主通道流水线增加了一个binder对象；
         bossPipeline.addLast("binder", binder);
+        
         if (parentHandler != null) {
             bossPipeline.addLast("userHandler", parentHandler);
         }
 
-        // 创建主通道，关联的pipeline是bossPipeline；
+        // 创建主通道（监听套接字通道），关联的pipeline是bossPipeline；
+        // 比如 NioServerSocketChannel(this, pipeline, sink, bossPool.nextBoss(), workerPool);
         Channel channel = getFactory().newChannel(bossPipeline);
+        // 创建一个不可取消的绑定Future
         final ChannelFuture bfuture = new DefaultChannelFuture(channel, false);
+        
+        // 给Binder对象中的Future增加一个观察者，如果那个Future成功的话，这里的bfuture就会成功
+        // 所以还是看那边的 何时成功。
         binder.bindFuture.addListener(new ChannelFutureListener() {
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
@@ -193,19 +198,21 @@ public class ServerBootstrap extends Bootstrap {
     private final class Binder extends SimpleChannelUpstreamHandler {
 
         private final SocketAddress localAddress;
-        private final Map<String, Object> childOptions =
-            new HashMap<String, Object>();
+        private final Map<String, Object> childOptions =   new HashMap<String, Object>();
         private final DefaultChannelFuture bindFuture = new DefaultChannelFuture(null, false);
+        
         Binder(SocketAddress localAddress) {
             this.localAddress = localAddress;
         }
 
+        /**
+         * 在 handleUpstream 方法中会调用
+         */
         @Override
-        public void channelOpen(
-                ChannelHandlerContext ctx,
-                ChannelStateEvent evt) {
+        public void channelOpen( ChannelHandlerContext ctx, ChannelStateEvent evt) {
 
             try {
+            	// 内部类可以访问外部类的方法 ，如 getPipelineFactory()。
                 evt.getChannel().getConfig().setPipelineFactory(getPipelineFactory());
 
                 // Split options into two categories: parent and child.
@@ -213,9 +220,7 @@ public class ServerBootstrap extends Bootstrap {
                 Map<String, Object> parentOptions = new HashMap<String, Object>();
                 for (Entry<String, Object> e: allOptions.entrySet()) {
                     if (e.getKey().startsWith("child.")) {
-                        childOptions.put(
-                                e.getKey().substring(6),
-                                e.getValue());
+                        childOptions.put( e.getKey().substring(6), e.getValue());
                     } else if (!"pipelineFactory".equals(e.getKey())) {
                         parentOptions.put(e.getKey(), e.getValue());
                     }
@@ -227,9 +232,11 @@ public class ServerBootstrap extends Bootstrap {
                 ctx.sendUpstream(evt);
             }
 
+            //============ 真正的绑定套接字 =======
             evt.getChannel().bind(localAddress).addListener(new ChannelFutureListener() {
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
+                    	// 这里触发了 bind的成功
                         bindFuture.setSuccess();
                     } else {
                         bindFuture.setFailure(future.getCause());

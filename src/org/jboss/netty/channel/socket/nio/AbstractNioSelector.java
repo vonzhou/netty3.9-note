@@ -60,6 +60,7 @@ abstract class AbstractNioSelector implements NioSelector {
     final CountDownLatch startupLatch = new CountDownLatch(1);
 
     /**
+     * 核心成员。
      * NIO库中的选择器Selector
      */
     protected volatile Selector selector;
@@ -415,6 +416,7 @@ abstract class AbstractNioSelector implements NioSelector {
             shutdownLatch.await();
         } catch (InterruptedException e) {
             logger.error("Interrupted while wait for resources to be released #" + id);
+            //很重要的原则，保留中断状态，让上层线程去处理
             Thread.currentThread().interrupt();
         }
     }

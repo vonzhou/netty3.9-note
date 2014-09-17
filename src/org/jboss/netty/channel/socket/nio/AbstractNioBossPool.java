@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel.socket.nio;
 
 import org.jboss.netty.logging.InternalLogger;
@@ -37,13 +22,10 @@ public abstract class AbstractNioBossPool<E extends Boss>
     private final Boss[] bosses;
     private final AtomicInteger bossIndex = new AtomicInteger();
     private final Executor bossExecutor;
-    private volatile boolean initialized;
+    private volatile boolean initialized; // 状态控制变量
 
     /**
-     * Create a new instance
-     *
-     * @param bossExecutor the {@link Executor} to use for the {@link Boss}'s
-     * @param bossCount the count of {@link Boss}'s to create
+     * 构造器（执行器，boss的个数，是否自动初始化）
      */
     AbstractNioBossPool(Executor bossExecutor, int bossCount) {
         this(bossExecutor, bossCount, true);
@@ -58,6 +40,7 @@ public abstract class AbstractNioBossPool<E extends Boss>
                     "bossCount (" + bossCount + ") " +
                             "must be a positive integer.");
         }
+        // 创建Boss，分配内存。
         bosses = new Boss[bossCount];
         this.bossExecutor = bossExecutor;
         if (autoInit) {
@@ -72,6 +55,8 @@ public abstract class AbstractNioBossPool<E extends Boss>
         initialized = true;
 
         for (int i = 0; i < bosses.length; i++) {
+        	// 创建这些Boss，有具体类实现，实际上就是 NioServerBoss 对象。
+        	// 创建NioServerBoss 对象后会调用openSelector打开对应的Selector，所以要有超时控制。
             bosses[i] = newBoss(bossExecutor);
         }
 
@@ -79,9 +64,11 @@ public abstract class AbstractNioBossPool<E extends Boss>
     }
 
     private void waitForBossThreads() {
+    	// Java并发编程实践， 
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(INITIALIZATION_TIMEOUT);
         boolean warn = false;
-        for (Boss boss: bosses) {
+        for (Boss boss: bosses) { //NioServerBoss extends AbstractNioSelector
+        	// 会出现这种情况吗？
             if (!(boss instanceof AbstractNioSelector)) {
                 continue;
             }
@@ -89,17 +76,19 @@ public abstract class AbstractNioBossPool<E extends Boss>
             AbstractNioSelector selector = (AbstractNioSelector) boss;
             long waitTime = deadline - System.nanoTime();
             try {
-                if (waitTime <= 0) {
+                if (waitTime <= 0) { // 初始化阶段超时
                     if (selector.thread == null) {
                         warn = true;
                         break;
                     }
                 } else if (!selector.startupLatch.await(waitTime, TimeUnit.NANOSECONDS)) {
+                	// 等待所有的线程都达到这里，返回 false if the waiting time elapsed before the count reached zero
                     warn = true;
                     break;
                 }
             } catch (InterruptedException ignore) {
                 // Stop waiting for the boss threads and let someone else take care of the interruption.
+            	// 恢复中断，让上层代码就行处理。
                 Thread.currentThread().interrupt();
                 break;
             }
@@ -114,11 +103,7 @@ public abstract class AbstractNioBossPool<E extends Boss>
     }
 
     /**
-     * Create a new {@link Boss} which uses the given {@link Executor} to service IO
-     *
-     *
-     * @param executor the {@link Executor} to use
-     * @return worker the new {@link Boss}
+     * 创建一个新的Boss，利用Executor来执行IO操作。
      */
     protected abstract E newBoss(Executor executor);
 

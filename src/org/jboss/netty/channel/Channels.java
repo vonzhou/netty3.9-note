@@ -109,7 +109,7 @@ public final class Channels {
 			fireChildChannelStateChanged(channel.getParent(), channel);
 		}
 
-		channel.getPipeline().sendUpstream(
+		channel.getPipeline().sendUpstream(	
 				new UpstreamChannelStateEvent(channel, ChannelState.OPEN,
 						Boolean.TRUE));
 	}

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel;
 
 import org.jboss.netty.logging.InternalLogger;
@@ -120,7 +105,7 @@ public class DefaultChannelFuture implements ChannelFuture {
 
         boolean notifyNow = false;
         synchronized (this) {
-            if (done) {
+            if (done) {   // done = true表示队列中没有监听者（消费者）
                 notifyNow = true;
             } else {
                 if (firstListener == null) {
@@ -142,6 +127,7 @@ public class DefaultChannelFuture implements ChannelFuture {
         }
 
         if (notifyNow) {
+        	// 通知所有
             notifyListener(listener);
         }
     }
@@ -222,6 +208,7 @@ public class DefaultChannelFuture implements ChannelFuture {
     }
 
     public ChannelFuture await() throws InterruptedException {
+    	// 开头检查中断异常，够吗？？
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
@@ -231,8 +218,10 @@ public class DefaultChannelFuture implements ChannelFuture {
                 checkDeadLock();
                 waiters++;
                 try {
-                    wait();
+                	// 当前线程等待，直到其他线程调用 notify方法或者notifyAll。
+                    wait();  //Object的wait方法；
                 } finally {
+                	// 得到通知后 waiters--。
                     waiters--;
                 }
             }
@@ -249,6 +238,9 @@ public class DefaultChannelFuture implements ChannelFuture {
         return await0(MILLISECONDS.toNanos(timeoutMillis), true);
     }
 
+    /**
+     * 等待过程中不对中断异常做出响应，最后恢复中断，通知上层。
+     */
     public ChannelFuture awaitUninterruptibly() {
         boolean interrupted = false;
         synchronized (this) {

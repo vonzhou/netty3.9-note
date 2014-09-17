@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel.socket.nio;
 
 import static org.jboss.netty.channel.Channels.*;
@@ -39,7 +24,7 @@ class NioServerSocketChannel extends AbstractServerChannel
 
     final ServerSocketChannel socket;
     final Boss boss;
-    final WorkerPool<NioWorker> workerPool;
+    final WorkerPool<NioWorker> workerPool;  //线程池
 
     private final ServerSocketChannelConfig config;
 
@@ -54,19 +39,18 @@ class NioServerSocketChannel extends AbstractServerChannel
         try {
             socket = ServerSocketChannel.open();
         } catch (IOException e) {
-            throw new ChannelException(
-                    "Failed to open a server socket.", e);
+            throw new ChannelException("Failed to open a server socket.", e);
         }
 
         try {
+        	// 非阻塞
             socket.configureBlocking(false);
         } catch (IOException e) {
             try {
                 socket.close();
             } catch (IOException e2) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn(
-                            "Failed to close a partially initialized socket.", e2);
+                    logger.warn( "Failed to close a partially initialized socket.", e2);
                 }
             }
 
@@ -75,6 +59,7 @@ class NioServerSocketChannel extends AbstractServerChannel
 
         config = new DefaultServerSocketChannelConfig(socket.socket());
 
+        //很关键，在创建完通道后，执行实际的套接字open，而后就会激发Open Event，这样后面的Binder就会收到，进行实际处理。
         fireChannelOpen(this);
     }
 

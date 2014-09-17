@@ -208,6 +208,8 @@ public class Bootstrap implements ExternalResourceReleasable {
 
     /**
      * 只是调用ChannelFactory的releaseExternalResources()方法
+     * 个人体会：因为最底层的shutdown方法保留了中断状态，所以我们上层在调用的时候，要捕获InterruptedException
+     * 进行处理。
      */
     public void releaseExternalResources() {
         ChannelFactory factory = this.factory;

@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package org.jboss.netty.channel.socket.nio;
 
 import org.jboss.netty.channel.Channel;
@@ -37,6 +22,7 @@ import java.util.concurrent.Executor;
 import static org.jboss.netty.channel.Channels.*;
 
 /**
+ * 这个任务专门处理连接请求，有一个Excutor进行管理。
  * Boss implementation which handles accepting of new connections
  */
 public final class NioServerBoss extends AbstractNioSelector implements Boss {
@@ -51,6 +37,7 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
 
     void bind(final NioServerSocketChannel channel, final ChannelFuture future,
               final SocketAddress localAddress) {
+    	// 将这个任务加入队列
         registerTask(new RegisterTask(channel, future, localAddress));
     }
 
@@ -84,6 +71,9 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
         }
     }
 
+    /**
+     * 很重要，父类AbstractNioSelector的run方法会调用。
+     */
     @Override
     protected void process(Selector selector) {
         Set<SelectionKey> selectedKeys = selector.selectedKeys();
@@ -92,16 +82,20 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
         }
         for (Iterator<SelectionKey> i = selectedKeys.iterator(); i.hasNext();) {
             SelectionKey k = i.next();
-            i.remove();
+            i.remove(); //
+            // 得到监听套接字通道
             NioServerSocketChannel channel = (NioServerSocketChannel) k.attachment();
 
             try {
                 // accept connections in a for loop until no new connection is ready
                 for (;;) {
+                	
                     SocketChannel acceptedSocket = channel.socket.accept();
+                    // 非阻塞模式
                     if (acceptedSocket == null) {
                         break;
                     }
+                    // 有连接请求的到来，那么就分发给worker处理。
                     registerAcceptedChannel(channel, acceptedSocket, thread);
                 }
             } catch (CancelledKeyException e) {
@@ -115,8 +109,7 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
                 // Closed as requested.
             } catch (Throwable t) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn(
-                            "Failed to accept a connection.", t);
+                    logger.warn( "Failed to accept a connection.", t);
                 }
 
                 try {
@@ -134,6 +127,7 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
             ChannelSink sink = parent.getPipeline().getSink();
             ChannelPipeline pipeline =
                     parent.getConfig().getPipelineFactory().getPipeline();
+            //安排一个线程来处理这个连接通道 acceptedSocket
             NioWorker worker = parent.workerPool.nextWorker();
             worker.register(new NioAcceptedSocketChannel(
                     parent.getFactory(), pipeline, parent, sink
@@ -164,6 +158,9 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
         return selector.select();
     }
 
+    /**
+     * 具体的创建每个boss 任务。
+     */
     @Override
     protected ThreadRenamingRunnable newThreadRenamingRunnable(int id, ThreadNameDeterminer determiner) {
         return new ThreadRenamingRunnable(this,
@@ -191,11 +188,13 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
             boolean bound = false;
             boolean registered = false;
             try {
+            	//最底层的绑定操作
                 channel.socket.socket().bind(localAddress, channel.getConfig().getBacklog());
                 bound = true;
 
                 future.setSuccess();
                 fireChannelBound(channel, channel.getLocalAddress());
+                // 把这个socket纳入Selector管理，关注的操作是连接请求的到达。因为这是监听套接字
                 channel.socket.register(selector, SelectionKey.OP_ACCEPT, channel);
 
                 registered = true;
