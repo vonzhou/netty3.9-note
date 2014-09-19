@@ -74,12 +74,13 @@ abstract class AbstractNioWorker extends AbstractNioSelector implements Worker {
         sendBufferPool.releaseExternalResources();
     }
 
+    /**
+     * 每个worker处理各自的连接读写请求。
+     */
     @Override
     protected void process(Selector selector) throws IOException {
         Set<SelectionKey> selectedKeys = selector.selectedKeys();
-        // check if the set is empty and if so just return to not create garbage by
-        // creating a new Iterator every time even if there is nothing to process.
-        // See https://github.com/netty/netty/issues/597
+        //如果集合为空就立即返回而不是每次创建迭代器，却无事可做。
         if (selectedKeys.isEmpty()) {
             return;
         }

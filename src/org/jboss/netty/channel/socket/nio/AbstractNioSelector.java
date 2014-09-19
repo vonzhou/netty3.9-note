@@ -99,6 +99,9 @@ abstract class AbstractNioSelector implements NioSelector {
         openSelector(determiner);
     }
 
+    /**
+     * 把这个ChannelFuture放入该Channel管辖的工作队列中。
+     */
     public void register(Channel channel, ChannelFuture future) {
     	//创建一个注册任务（具体由上层实现），而后加入工作队列。
         Runnable task = createRegisterTask(channel, future);
@@ -242,9 +245,6 @@ abstract class AbstractNioSelector implements NioSelector {
                             selectReturnsImmediately = 0;
                         } else {
                         	//在超时限制之前就返回，并且返回的结果是0，这或许是导致jdk epoll bug的原因，累积。
-                            // returned before the minSelectTimeout elapsed with nothing select.
-                            // this may be the cause of the jdk epoll(..) bug, so increment the counter
-                            // which we use later to see if its really the jdk bug.
                             selectReturnsImmediately ++;
                         }
                     } else {
@@ -285,10 +285,6 @@ abstract class AbstractNioSelector implements NioSelector {
                  * selector.wakeup()。
                  * 对这两种情况来说，惊醒selector的操作都是低效的。
                  */
-                // It is inefficient in that it wakes up the selector for both
-                // the first case (BAD - wake-up required) and the second case
-                // (OK - no wake-up required).
-
                 if (wakenUp.get()) {
                     wakenupFromLoop = true;
                     selector.wakeup();
@@ -314,13 +310,13 @@ abstract class AbstractNioSelector implements NioSelector {
                     	// 要关闭Selector；
                         selector.close();
                     } catch (IOException e) {
-                        logger.warn(
-                                "Failed to close a selector.", e);
+                        logger.warn("Failed to close a selector.", e);
                     }
                     // 打开这个闭锁；
                     shutdownLatch.countDown();
                     break;
                 } else {
+                	//核心的过程，有具体的NioSelector来实现
                     process(selector);
                 }
             } catch (Throwable t) {

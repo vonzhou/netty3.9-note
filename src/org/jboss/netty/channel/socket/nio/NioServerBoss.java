@@ -121,12 +121,14 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
         }
     }
 
+    /**
+     * 把这个连接套接字分发给一个worker来处理
+     */
     private static void registerAcceptedChannel(NioServerSocketChannel parent, SocketChannel acceptedSocket,
                                          Thread currentThread) {
         try {
             ChannelSink sink = parent.getPipeline().getSink();
-            ChannelPipeline pipeline =
-                    parent.getConfig().getPipelineFactory().getPipeline();
+            ChannelPipeline pipeline =  parent.getConfig().getPipelineFactory().getPipeline();
             //安排一个线程来处理这个连接通道 acceptedSocket
             NioWorker worker = parent.workerPool.nextWorker();
             worker.register(new NioAcceptedSocketChannel(
@@ -135,17 +137,14 @@ public final class NioServerBoss extends AbstractNioSelector implements Boss {
                     worker, currentThread), null);
         } catch (Exception e) {
             if (logger.isWarnEnabled()) {
-                logger.warn(
-                        "Failed to initialize an accepted socket.", e);
+                logger.warn( "Failed to initialize an accepted socket.", e);
             }
 
             try {
                 acceptedSocket.close();
             } catch (IOException e2) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn(
-                            "Failed to close a partially accepted socket.",
-                            e2);
+                    logger.warn("Failed to close a partially accepted socket.",e2);
                 }
             }
         }

@@ -79,7 +79,7 @@ public class ClientBootstrap extends Bootstrap {
         }
 
         //Set the options.
-        //ChannelFactory根据指定的pipeline创建一个通道，创建的时候就会打开，看OioClientSocketChannel
+        //ChannelFactory根据指定的pipeline创建一个通道，创建的时候就会打开，比如看 OioClientSocketChannel
         Channel ch = getFactory().newChannel(pipeline);
         boolean success = false;
         try {
@@ -98,7 +98,7 @@ public class ClientBootstrap extends Bootstrap {
             ch.bind(localAddress);
         }
 
-        // Connect.
+        // Connect.这里最终会调用Channels.connect辅助方法
         return ch.connect(remoteAddress);
     }
 

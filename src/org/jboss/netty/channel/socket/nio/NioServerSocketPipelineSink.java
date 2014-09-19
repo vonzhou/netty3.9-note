@@ -12,8 +12,7 @@ import java.net.SocketAddress;
 
 class NioServerSocketPipelineSink extends AbstractNioChannelSink {
 
-    public void eventSunk(
-            ChannelPipeline pipeline, ChannelEvent e) throws Exception {
+    public void eventSunk( ChannelPipeline pipeline, ChannelEvent e) throws Exception {
         Channel channel = e.getChannel();
         if (channel instanceof NioServerSocketChannel) {
             handleServerSocket(e);
