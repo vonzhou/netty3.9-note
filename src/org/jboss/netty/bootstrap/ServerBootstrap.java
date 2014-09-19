@@ -162,6 +162,7 @@ public class ServerBootstrap extends Bootstrap {
         if (localAddress == null) {
             throw new NullPointerException("localAddress");
         }
+        // 相当于多重继承的实现
         Binder binder = new Binder(localAddress);
         ChannelHandler parentHandler = getParentHandler();
 
@@ -195,6 +196,7 @@ public class ServerBootstrap extends Bootstrap {
         return bfuture;
     }
 
+    // 也继承了 SimpleChannelUpstreamHandler
     private final class Binder extends SimpleChannelUpstreamHandler {
 
         private final SocketAddress localAddress;
@@ -206,7 +208,7 @@ public class ServerBootstrap extends Bootstrap {
         }
 
         /**
-         * 在 handleUpstream 方法中会调用
+         * 在 handleUpstream 方法中会触发
          */
         @Override
         public void channelOpen( ChannelHandlerContext ctx, ChannelStateEvent evt) {

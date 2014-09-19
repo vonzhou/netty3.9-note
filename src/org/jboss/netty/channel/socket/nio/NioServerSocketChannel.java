@@ -22,7 +22,7 @@ class NioServerSocketChannel extends AbstractServerChannel
     private static final InternalLogger logger =
         InternalLoggerFactory.getInstance(NioServerSocketChannel.class);
 
-    final ServerSocketChannel socket;
+    final ServerSocketChannel socket;  // 核心发力点
     final Boss boss;
     final WorkerPool<NioWorker> workerPool;  //线程池
 
